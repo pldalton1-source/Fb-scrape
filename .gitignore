@@ -1,0 +1,8 @@
+# Secrets — never commit. Copy config/credentials.example.toml to
+# config/credentials.toml and fill in your own values.
+config/credentials.toml
+
+# Local python environment and runtime state
+.venv/
+__pycache__/
+*.log

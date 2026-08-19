@@ -1,0 +1,189 @@
+# =====================================================================
+# Steel drop-bar bike search — ai-marketplace-monitor v0.10.2
+#
+# This file is safe to version control: it contains no credentials.
+# Credentials (Facebook login, Pushover keys, Anthropic API key) live
+# in config/credentials.toml, which is gitignored. Run with BOTH files:
+#
+#   ai-marketplace-monitor --headless \
+#       --config config/bikes.toml --config config/credentials.toml
+#
+# Note: ~/.ai-marketplace-monitor/config.toml is ALWAYS read too, if it
+# exists. Keep it empty/absent so this repo is the single source of truth.
+# =====================================================================
+
+[marketplace.facebook]
+# Minneapolis anchor. 'minneapolis' is the slug Facebook uses in
+# https://www.facebook.com/marketplace/minneapolis/search?query=...
+search_city = 'minneapolis'
+
+# Radius unit follows your Facebook account locale (miles for US
+# accounts). 150 mi from Minneapolis covers Duluth (~135), St. Cloud
+# (~65), Rochester (~80), Eau Claire (~90), and La Crosse (~140), so a
+# single anchor works — no need for separate per-city regions.
+# Facebook's maximum is 500.
+radius = 150
+
+# Empty = do not filter by the seller's displayed city (the radius
+# already bounds the search; a seller-location list would drop listings
+# from towns not on the list).
+seller_locations = []
+
+# Newest first — best for catching fresh listings on frequent polls.
+sort_by = 'new'
+
+# First run: look at everything. Subsequent runs: only listings from
+# the last 24 hours (already-seen listings are cached and skipped).
+date_listed = ['all', 'last 24 hours']
+
+# Default polling cadence (Tier 1 inherits this; Tier 2 overrides).
+# A random interval in [search_interval, max_search_interval] is chosen
+# each cycle — the jitter makes traffic look less bot-like.
+search_interval = '15m'
+max_search_interval = '25m'
+
+# How long (seconds) the browser waits for you to complete login /
+# CAPTCHA on the first run.
+login_wait_time = 60
+
+notify = 'me'
+
+# =====================================================================
+# TIER 1 — one block per model. Tight price band, keyword anchor on the
+# model name, NO AI gate (ai = [] means every listing that passes the
+# price + keyword filter notifies immediately). These inherit the
+# 15–25 min marketplace polling interval.
+# =====================================================================
+
+[item.macho_king]
+search_phrases = 'all city macho king'
+keywords = 'macho king'
+min_price = 500
+max_price = 1600
+ai = []
+
+[item.cosmic_stallion]
+search_phrases = 'all city cosmic stallion'
+keywords = 'cosmic stallion'
+min_price = 800
+max_price = 2200
+ai = []
+
+[item.road_logic]
+search_phrases = 'ritchey road logic'
+keywords = 'road logic'
+min_price = 800
+max_price = 2000
+ai = []
+
+[item.swiss_cross]
+search_phrases = 'ritchey swiss cross'
+keywords = 'swiss cross'
+min_price = 800
+max_price = 2200
+ai = []
+
+[item.fog_cutter]
+search_phrases = 'soma fog cutter'
+keywords = 'fog cutter'
+min_price = 600
+max_price = 1800
+ai = []
+
+[item.smoothie]
+search_phrases = 'soma smoothie'
+keywords = 'soma AND smoothie'
+min_price = 400
+max_price = 1200
+ai = []
+
+[item.gunnar_sport]
+search_phrases = 'gunnar sport'
+keywords = 'gunnar AND sport'
+min_price = 500
+max_price = 1500
+ai = []
+
+[item.gunnar_hyper_x]
+search_phrases = 'gunnar hyper x'
+keywords = 'gunnar AND (hyper OR "hyper-x")'
+min_price = 500
+max_price = 1600
+ai = []
+
+[item.strael]
+search_phrases = 'fairlight strael'
+keywords = 'strael'
+min_price = 1200
+max_price = 2800
+ai = []
+
+[item.roadhouse]
+search_phrases = 'kona roadhouse'
+keywords = 'roadhouse'
+min_price = 500
+max_price = 1400
+ai = []
+
+[item.masi_speciale]
+search_phrases = 'masi speciale'
+keywords = 'masi AND speciale'
+min_price = 300
+max_price = 1000
+ai = []
+
+[item.super_professional]
+search_phrases = 'all city super professional'
+keywords = 'super professional'
+min_price = 600
+max_price = 1600
+ai = []
+
+# =====================================================================
+# TIER 2 — broad net, AI-gated. Six search phrases, one price band.
+# Requires [ai.anthropic] (in credentials.toml) to be configured;
+# without a working AI key every listing passing the price filter and
+# antikeywords would notify.
+# =====================================================================
+
+[item.steel_drop_bar]
+search_phrases = [
+    'gravel bike',
+    'cyclocross bike',
+    'steel road bike',
+    'all road bike',
+    'CX bike',
+    'Reynolds 853',
+]
+min_price = 700
+max_price = 2200
+
+# Cheap pre-filter before the AI sees anything: known bikepacking/
+# touring platforms the buyer explicitly rejects.
+antikeywords = ['Fargo', 'Gorilla Monsoon', 'Straggler', 'Disc Trucker']
+
+# Broad searches return hundreds of listings; poll less often than
+# Tier 1 to limit page loads and AI spend.
+search_interval = '1h'
+max_search_interval = '90m'
+
+# Only notify on AI rating >= 4 ("good match" or better).
+rating = 4
+
+description = """\
+Drop-bar steel road, all-road, or cyclocross bike. Size 54-56cm or \
+Medium (rider is 5'10\"). Prefer Reynolds 853, Columbus, True Temper, \
+or Tange Prestige tubing. Aggressive road geometry; disc brakes \
+preferred but rim brakes are acceptable on the right frame. \
+REJECT: flat bars, MTB tires, MTB cranksets (SRAM NX/GX Eagle), \
+cassettes 11-46t or larger, and bikepacking/touring geometry \
+(Salsa Fargo, All City Gorilla Monsoon, Surly Straggler, Surly Disc \
+Trucker)."""
+
+extra_prompt = """\
+In your assessment, explicitly rate (a) size fit for a 5'10\" rider \
+wanting 54-56cm / Medium, and (b) tubing quality (Reynolds 853, \
+Columbus, True Temper, Tange Prestige rank highest). If the listing \
+shows flat bars, MTB tires, an MTB crankset such as SRAM NX or GX \
+Eagle, a cassette of 11-46t or larger, or bikepacking/touring \
+geometry, rate it 1 or 2."""

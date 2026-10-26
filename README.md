@@ -12,6 +12,7 @@ search around Minneapolis, built on
 | `config/bikes.toml` | Search config — version controlled, no secrets. |
 | `config/credentials.example.toml` | Template for the secrets file — committed. |
 | `config/credentials.toml` | Your actual secrets — **gitignored, never committed**. |
+| `config/credentials.env.toml` | Same fields as `${VAR}` references — safe to commit. |
 | `setup.sh` | One-shot installer: venv, tool, browser, then self-tests. |
 | `run-monitor.sh` | Starts the monitor with both config files. |
 
@@ -79,6 +80,27 @@ comments for each):
    platform after the 30-day trial.
 3. **Anthropic API key** (Tier 2 AI screening only):
    <https://console.anthropic.com> → API Keys.
+
+### Or: keep secrets out of files entirely
+
+`config/credentials.env.toml` is committed and safe to commit — it holds
+only `${VAR}` references, which the tool resolves from the environment at
+startup:
+
+```bash
+CREDENTIALS=config/credentials.env.toml ./run-monitor.sh
+```
+
+Set `FACEBOOK_USERNAME`, `FACEBOOK_PASSWORD`, `PUSHOVER_USER_KEY`,
+`PUSHOVER_API_TOKEN` and `ANTHROPIC_API_KEY` in your shell, your systemd
+unit, or a hosted environment's secret settings. This is the right route
+when a password should never be written to a file or typed into a chat.
+
+`run-monitor.sh` refuses to start if any referenced variable is unset.
+That check earns its keep because the failures are not uniformly loud: a
+missing Anthropic key raises at startup, but missing Pushover keys do
+**not** — the monitor would run, match listings, and silently never
+notify you.
 
 ## Run
 

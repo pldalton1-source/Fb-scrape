@@ -12,6 +12,7 @@ search around Minneapolis, built on
 | `config/bikes.toml` | Search config — version controlled, no secrets. |
 | `config/credentials.example.toml` | Template for the secrets file — committed. |
 | `config/credentials.toml` | Your actual secrets — **gitignored, never committed**. |
+| `setup.sh` | One-shot installer: venv, tool, browser, then self-tests. |
 | `run-monitor.sh` | Starts the monitor with both config files. |
 
 The tool natively merges multiple `--config` files, which is what makes
@@ -25,11 +26,28 @@ Python 3.10+ required.
 
 ```bash
 git clone https://github.com/pldalton1-source/Fb-scrape && cd Fb-scrape
+./setup.sh
+```
+
+`setup.sh` is idempotent and never overwrites an existing
+`config/credentials.toml`, so re-running it cannot destroy your secrets.
+It creates the venv, installs the pinned tool and the browser, copies the
+credentials template into place at mode 600, and then **self-tests**: it
+loads the config through the tool's own validator and launches a headless
+Chromium. An install that passes has proved itself rather than merely
+finished. It ends by listing exactly which values are still unfilled.
+
+Pass `--skip-browser` if a matching Chromium is already installed.
+
+### Or the same steps by hand
+
+```bash
 python3 -m venv .venv
 .venv/bin/pip install ai-marketplace-monitor==0.10.2
 .venv/bin/playwright install chromium         # downloads the browser
 # Linux only — system libraries for Chromium:
 sudo .venv/bin/playwright install-deps chromium
+cp config/credentials.example.toml config/credentials.toml
 ```
 
 (pipx also works: `pipx install ai-marketplace-monitor==0.10.2` then

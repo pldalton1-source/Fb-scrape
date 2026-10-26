@@ -11,8 +11,11 @@ if [[ ! -f config/credentials.toml ]]; then
     exit 1
 fi
 
-if grep -q REPLACE_ME config/credentials.toml; then
+# Only real settings count: the template's own comments mention REPLACE_ME,
+# so an unfiltered grep refuses to start even when every value is filled in.
+if grep -v '^[[:space:]]*#' config/credentials.toml | grep -q REPLACE_ME; then
     echo "config/credentials.toml still contains REPLACE_ME placeholders — fill them in first." >&2
+    grep -n REPLACE_ME config/credentials.toml | grep -v '^[0-9]*:[[:space:]]*#' >&2
     exit 1
 fi
 

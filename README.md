@@ -131,6 +131,24 @@ On macOS use a `launchd` plist or just keep it in a `tmux` session.
   against the size (54–56cm / M for 5'10") and tubing criteria; only
   **rating ≥ 4** notifies. Polled every **1–1.5 h**.
 
+### The AI gate fails open
+
+Worth knowing before trusting Tier 2: the monitor scores a listing **5**,
+with the comment "Not evaluated by AI", whenever the AI call raises an
+exception — and 5 clears the `rating = 4` threshold. An AI failure does
+not quietly skip the listing, it pushes it as a top-rated match.
+
+A missing `[ai.anthropic]` section does this, but so does an expired key,
+an unfunded account, a rate limit, or a response the tool cannot parse.
+If Tier 2 starts notifying on everything in the $700–2200 band, check the
+log for
+
+```
+[AI] Failed to get an answer from anthropic:
+```
+
+before concluding the price band or antikeywords are wrong.
+
 ### Polling tradeoff
 
 The scheduler technically allows a 1-second interval, but every cycle

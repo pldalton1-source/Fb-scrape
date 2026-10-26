@@ -141,9 +141,15 @@ ai = []
 
 # =====================================================================
 # TIER 2 — broad net, AI-gated. Six search phrases, one price band.
-# Requires [ai.anthropic] (in credentials.toml) to be configured;
-# without a working AI key every listing passing the price filter and
-# antikeywords would notify.
+# Requires [ai.anthropic] (in credentials.toml) to be configured.
+#
+# IMPORTANT — the AI gate fails OPEN. The tool scores a listing 5 ("Not
+# evaluated by AI") whenever the AI call raises, and 5 clears the
+# rating = 4 threshold below. A missing key does that, but so does an
+# expired key, an unfunded account, a rate limit, or a reply the tool
+# cannot parse — any of them turn this block into an unfiltered
+# $700-2200 firehose rather than silencing it. Watch the log for:
+#     [AI] Failed to get an answer from anthropic:
 # =====================================================================
 
 [item.steel_drop_bar]
